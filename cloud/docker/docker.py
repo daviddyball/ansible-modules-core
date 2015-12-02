@@ -297,6 +297,12 @@ options:
         retries.
     default: 0
     version_added: "1.9"
+  stop_timeout:
+    description:
+      - Maximum number of seconds to wait for a container top stop when state ==
+        "stopped"
+    default: 10
+    version_added: "2.0"
   extra_hosts:
     version_added: "2.0"
     description:
@@ -1485,7 +1491,7 @@ class DockerManager(object):
 
     def stop_containers(self, containers):
         for i in containers:
-            self.client.stop(i['Id'])
+            self.client.stop(i['Id'], timeout=self.module.params.get('stop_timeout'))
             self.increment_counter('stopped')
 
         return [self.client.wait(i['Id']) for i in containers]
@@ -1666,6 +1672,7 @@ def main():
             signal          = dict(default=None),
             restart_policy  = dict(default=None, choices=['always', 'on-failure', 'no']),
             restart_policy_retry = dict(default=0, type='int'),
+            stop_timeout    = dict(default=10, type='int'),
             extra_hosts     = dict(type='dict'),
             debug           = dict(default=False, type='bool'),
             privileged      = dict(default=False, type='bool'),
